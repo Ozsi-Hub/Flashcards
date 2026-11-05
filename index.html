@@ -16,48 +16,51 @@
       <p class="text-[11px] text-slate-400 text-center mb-2">1. oszlop: Angol | 2. oszlop: Magyar</p>
       <input type="text" id="csvUrl" placeholder="Illeszd be a Google Sheet CSV URL-t" 
              class="w-full text-xs p-2 rounded bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:border-blue-500">
-      <button id="loadBtn" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
+      <button onclick="loadWords()" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
     </div>
+
+    <!-- Hiba/Státusz üzenet kijelző -->
+    <div id="statusMsg" class="text-xs text-center mb-2 text-yellow-400 font-semibold"></div>
 
     <!-- Tanulási Mód Választó (Normál vs Okos) -->
     <div class="flex bg-slate-900 p-1 rounded-xl mb-3 border border-slate-700">
-      <button id="modeNormal" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-blue-600 text-white transition">Hagyományos (Összes)</button>
-      <button id="modeSmart" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-white transition">🎯 Okos Ismétlés</button>
+      <button id="modeNormal" onclick="setStudyMode('normal')" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-blue-600 text-white transition">Hagyományos (Összes)</button>
+      <button id="modeSmart" onclick="setStudyMode('smart')" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-white transition">🎯 Okos Ismétlés</button>
     </div>
 
     <!-- 4 Lapfül Ikonokkal -->
     <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl mb-4 border border-slate-700">
-      <button id="tabBtn0" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex flex-col items-center">
+      <button onclick="switchTab(0)" id="tabBtn0" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex flex-col items-center">
         <span>🃏</span><span class="text-[10px]">Kártya</span>
       </button>
-      <button id="tabBtn1" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button onclick="switchTab(1)" id="tabBtn1" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🎤</span><span class="text-[10px]">Kiejtés</span>
       </button>
-      <button id="tabBtn2" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button onclick="switchTab(2)" id="tabBtn2" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🧩</span><span class="text-[10px]">Párosító</span>
       </button>
-      <button id="tabBtn3" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button onclick="switchTab(3)" id="tabBtn3" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🧠</span><span class="text-[10px]">Kvíz</span>
       </button>
     </div>
 
     <!-- ================= 1. FÜL: FLASHCARD ================= -->
     <div id="tabContent0" class="tab-content">
-      <div id="card" class="h-36 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
+      <div id="card" onclick="flipCard()" class="h-36 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
         <span id="cardLabel" class="text-xs text-blue-400 mb-1 uppercase tracking-wider">Angol szó:</span>
         <span id="cardText" class="text-2xl font-bold text-center">Töltsd be a szavakat</span>
         <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
       </div>
       
       <div id="cardRatingBox" class="hidden grid grid-cols-2 gap-2 mt-3">
-        <button id="btnNotKnown" class="bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700 py-1.5 rounded-lg text-xs font-semibold transition">❌ Nem tudtam</button>
-        <button id="btnKnown" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 py-1.5 rounded-lg text-xs font-semibold transition">✓ Tudtam</button>
+        <button onclick="rateWord(false)" class="bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700 py-1.5 rounded-lg text-xs font-semibold transition">❌ Nem tudtam</button>
+        <button onclick="rateWord(true)" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 py-1.5 rounded-lg text-xs font-semibold transition">✓ Tudtam</button>
       </div>
 
       <div class="flex justify-between items-center mt-3">
-        <button id="prevCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
+        <button onclick="prevCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
         <span id="cardCounter" class="text-xs text-slate-400">0 / 0</span>
-        <button id="nextCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
+        <button onclick="nextCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
       </div>
     </div>
 
@@ -70,10 +73,10 @@
       </div>
       <div id="voiceFeedback" class="h-8 mt-2 text-xs font-semibold flex items-center justify-center px-1 text-center"></div>
       <div class="flex justify-center items-center gap-4 mt-2">
-        <button id="micBtn" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center scale-110">
+        <button onclick="startListening()" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center scale-110">
           🎤
         </button>
-        <button id="nextVoiceBtn" class="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl text-xs font-medium transition">Következő ➔</button>
+        <button onclick="nextVoiceCard()" class="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl text-xs font-medium transition">Következő ➔</button>
       </div>
     </div>
 
@@ -81,7 +84,7 @@
     <div id="tabContent2" class="tab-content hidden">
       <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra, majd a magyar párjára!</div>
       <div class="grid grid-cols-2 gap-3 min-h-[180px]" id="matchContainer"></div>
-      <button id="resetMatchBtn" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
+      <button onclick="initMatchGame()" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
     </div>
 
     <!-- ================= 4. FÜL: KVÍZ ================= -->
@@ -100,6 +103,14 @@
     let currentIndex = 0;
     let isFlipped = false;
     let studyMode = 'normal';
+
+    function setStatus(text, colorClass = "text-yellow-400") {
+      const el = document.getElementById('statusMsg');
+      if (el) {
+        el.className = `text-xs text-center mb-2 font-semibold ${colorClass}`;
+        el.innerText = text;
+      }
+    }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
@@ -209,20 +220,26 @@
 
     async function loadWords() {
       const inputUrl = document.getElementById('csvUrl').value.trim();
-      if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
+      if (!inputUrl) {
+        alert("Kérlek adj meg egy valid CSV URL-t!");
+        return;
+      }
 
       let csvUrl = inputUrl;
       if (csvUrl.includes('/edit')) {
         csvUrl = csvUrl.replace(/\/edit.*$/, '/export?format=csv');
       }
 
+      setStatus("Betöltés folyamatban...");
+
       try {
         const response = await fetch(csvUrl);
-        if (!response.ok) throw new Error("Hálózati hiba");
+        if (!response.ok) throw new Error("Hálózati hiba: " + response.status);
         
         const data = await response.text();
         if (data.trim().startsWith('<!DOCTYPE html>')) {
-          alert("Hiba: A Google Sheet nem nyilvános! (Közzététel szükséges)");
+          setStatus("Hiba: A Google Sheet nem nyilvános! (Közzététel szükséges)", "text-red-400");
+          alert("Hiba: A Google Sheet nem nyilvános! Ellenőrizd a webes közzétételt.");
           return;
         }
 
@@ -245,6 +262,7 @@
 
         words = validWords;
         if (words.length === 0) {
+          setStatus("Nem találtunk szavakat a megadott helyen.", "text-red-400");
           alert("Nem találtunk szavakat a megadott helyen.");
           return;
         }
@@ -253,10 +271,11 @@
         currentIndex = 0;
         showCard();
         showVoiceCard();
-        alert(`Sikeresen betöltve: ${words.length} szó!`);
+        setStatus(`Sikeresen betöltve: ${words.length} szó!`, "text-green-400");
       } catch (err) {
         console.error(err);
-        alert("Nem sikerült betölteni a CSV-t.");
+        setStatus("Hiba a betöltés során. Nézd meg a konzolt!", "text-red-400");
+        alert("Nem sikerült betölteni a CSV-t. Ellenőrizd a linket!");
       }
     }
 
@@ -330,7 +349,7 @@
       }
     }
 
-    // 3. FÜL: PÁROSÍTÓ JÁTÉK JAVÍTOTT LOGIKA
+    // 3. FÜL: PÁROSÍTÓ JÁTÉK
     let matchEnList = [];
     let matchHuList = [];
     let selectedEnItem = null;
@@ -339,7 +358,10 @@
     let wrongHuText = null;
 
     function initMatchGame() {
-      if (words.length < 4) return alert("Legalább 4 szó szükséges a párosító játékhoz!");
+      if (words.length < 4) {
+        alert("Legalább 4 szó szükséges a párosító játékhoz!");
+        return;
+      }
       
       let pool = studyMode === 'smart' 
         ? [...words].sort((a, b) => b.weight - a.weight) 
@@ -376,7 +398,7 @@
           ? `<span class="text-emerald-300 font-bold">${item.en}</span>` 
           : `🔒 <i>(Kattints a hangért)</i>`;
 
-        html += `<div data-en-index="${idx}" class="en-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
+        html += `<div onclick="selectEnIndex(${idx})" class="p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
                   ${content}
                  </div>`;
       });
@@ -392,30 +414,17 @@
           bgClass = 'bg-amber-600 border-amber-400';
         }
 
-        html += `<div data-hu-index="${idx}" class="hu-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
+        html += `<div onclick="selectHuIndex(${idx})" class="p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
                   ${item.hu}
                  </div>`;
       });
       html += '</div>';
 
       container.innerHTML = html;
-
-      container.querySelectorAll('.en-card').forEach(el => {
-        el.addEventListener('click', () => {
-          let idx = parseInt(el.getAttribute('data-en-index'));
-          selectEnItem(matchEnList[idx]);
-        });
-      });
-
-      container.querySelectorAll('.hu-card').forEach(el => {
-        el.addEventListener('click', () => {
-          let idx = parseInt(el.getAttribute('data-hu-index'));
-          selectHuItem(matchHuList[idx]);
-        });
-      });
     }
 
-    function selectEnItem(item) {
+    function selectEnIndex(idx) {
+      let item = matchEnList[idx];
       if (item.matched) return;
       speakWord(item.en); 
       selectedEnItem = item;
@@ -423,7 +432,8 @@
       renderMatchBoard();
     }
 
-    function selectHuItem(item) {
+    function selectHuIndex(idx) {
+      let item = matchHuList[idx];
       if (item.matched) return;
       selectedHuItem = item;
       checkMatchLogic();
@@ -523,29 +533,6 @@
         initQuiz();
       }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('loadBtn').addEventListener('click', loadWords);
-      document.getElementById('modeNormal').addEventListener('click', () => setStudyMode('normal'));
-      document.getElementById('modeSmart').addEventListener('click', () => setStudyMode('smart'));
-
-      document.getElementById('tabBtn0').addEventListener('click', () => switchTab(0));
-      document.getElementById('tabBtn1').addEventListener('click', () => switchTab(1));
-      document.getElementById('tabBtn2').addEventListener('click', () => switchTab(2));
-      document.getElementById('tabBtn3').addEventListener('click', () => switchTab(3));
-
-      document.getElementById('card').addEventListener('click', flipCard);
-      document.getElementById('prevCardBtn').addEventListener('click', prevCard);
-      document.getElementById('nextCardBtn').addEventListener('click', nextCard);
-
-      document.getElementById('btnKnown').addEventListener('click', () => rateWord(true));
-      document.getElementById('btnNotKnown').addEventListener('click', () => rateWord(false));
-
-      document.getElementById('micBtn').addEventListener('click', startListening);
-      document.getElementById('nextVoiceBtn').addEventListener('click', nextVoiceCard);
-
-      document.getElementById('resetMatchBtn').addEventListener('click', initMatchGame);
-    });
   </script>
 </body>
 </html>
