@@ -68,7 +68,7 @@
     <div id="tabContent2" class="tab-content hidden">
       <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra (felolvassa), majd válaszd ki a magyar párját!</div>
       <div class="grid grid-cols-2 gap-3 min-h-[190px]" id="matchContainer">
-        <!-- Ide generálódik dinamikusan a 4 angol és 4 magyar doboz -->
+        <!-- Ide generálódik dinamikusan -->
       </div>
       <button onclick="initMatchGame()" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
     </div>
@@ -101,31 +101,40 @@
       recognition.interimResults = false;
 
       recognition.onstart = () => {
-        document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-yellow-400";
-        document.getElementById('voiceFeedback').innerText = "Hallgatlak... Besélj!";
+        const fb = document.getElementById('voiceFeedback');
+        if (fb) {
+          fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-yellow-400";
+          fb.innerText = "Hallgatlak... Besélj!";
+        }
       };
 
       recognition.onresult = (event) => {
         const spokenText = event.results[0][0].transcript.toLowerCase().trim();
         const targetWord = words[currentIndex]?.en.toLowerCase().trim();
+        const fb = document.getElementById('voiceFeedback');
 
         if (spokenText === targetWord) {
-          document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-green-400";
-          document.getElementById('voiceFeedback').innerText = `✓ Helyes! ("${spokenText}")`;
-          setTimeout(() => { nextVoiceCard(); }, 1500);
+          if (fb) {
+            fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-green-400";
+            fb.innerText = `✓ Helyes! ("${spokenText}")`;
+          }
+          setTimeout(() => { window.nextVoiceCard(); }, 1500);
         } else {
-          document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-red-400";
-          document.getElementById('voiceFeedback').innerHTML = `✗ Hallott: "${spokenText}". Helyes: <b>${words[currentIndex].en}</b>`;
+          if (fb) {
+            fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-red-400";
+            fb.innerHTML = `✗ Hallott: "${spokenText}". Helyes: <b>${words[currentIndex].en}</b>`;
+          }
         }
       };
 
       recognition.onerror = () => {
-        document.getElementById('voiceFeedback').innerText = "Nem hallottam tisztán, próbáld újra.";
+        const fb = document.getElementById('voiceFeedback');
+        if (fb) fb.innerText = "Nem hallottam tisztán, próbáld újra.";
       };
     }
 
     // Fül váltás logika
-    function switchTab(index) {
+    window.switchTab = function(index) {
       for (let i = 0; i < 4; i++) {
         document.getElementById(`tabContent${i}`).classList.add('hidden');
         document.getElementById(`tabBtn${i}`).className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center";
@@ -135,12 +144,12 @@
       const activeColors = ['bg-blue-600 text-white', 'bg-purple-600 text-white', 'bg-amber-600 text-white', 'bg-emerald-600 text-white'];
       document.getElementById(`tabBtn${index}`).className = `py-2 text-xs font-semibold rounded-lg ${activeColors[index]} transition flex flex-col items-center`;
 
-      if (index === 2 && words.length > 0) initMatchGame();
-      if (index === 3 && words.length > 0) initQuiz();
+      if (index === 2 && words.length > 0) window.initMatchGame();
+      if (index === 3 && words.length > 0) window.initQuiz();
     }
 
     // CSV Betöltés biztonságos ciklussal
-    async function loadWords() {
+    window.loadWords = async function() {
       const inputUrl = document.getElementById('csvUrl').value.trim();
       if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
 
@@ -171,3 +180,209 @@
 
           const cols = currentRow.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           const en = cols[0]?.replace(/"/g, '').trim();
+          const hu = cols[1]?.replace(/"/g, '').trim();
+
+          if (en && hu) validWords.push({ en, hu });
+        }
+
+        words = validWords;
+        if (words.length === 0) {
+          alert("Nem találtunk szavakat a megadott helyen.");
+          return;
+        }
+
+        currentIndex = 0;
+        window.showCard();
+        window.showVoiceCard();
+        alert(`Sikeresen betöltve: ${words.length} szó!`);
+      } catch (err) {
+        console.error(err);
+        alert("Nem sikerült betölteni a CSV-t.");
+      }
+    }
+
+    // 1. Fül logika (Flashcard)
+    window.showCard = function() {
+      if (words.length === 0) return;
+      isFlipped = false;
+      document.getElementById('cardLabel').innerText = "Angol szó:";
+      document.getElementById('cardText').innerText = words[currentIndex].en;
+      document.getElementById('cardHint').innerText = "(Kattints a fordításhoz)";
+      document.getElementById('cardCounter').innerText = `${currentIndex + 1} / ${words.length}`;
+    }
+
+    window.flipCard = function() {
+      if (words.length === 0) return;
+      isFlipped = !isFlipped;
+      document.getElementById('cardLabel').innerText = isFlipped ? "Magyar jelentés:" : "Angol szó:";
+      document.getElementById('cardText').innerText = isFlipped ? words[currentIndex].hu : words[currentIndex].en;
+      document.getElementById('cardHint').innerText = isFlipped ? "(Kattints az angolhoz)" : "(Kattints a fordításhoz)";
+    }
+
+    window.nextCard = function() {
+      if (words.length === 0) return;
+      currentIndex = (currentIndex + 1) % words.length;
+      window.showCard();
+    }
+
+    window.prevCard = function() {
+      if (words.length === 0) return;
+      currentIndex = (currentIndex - 1 + words.length) % words.length;
+      window.showCard();
+    }
+
+    // 2. Fül logika (Kiejtés)
+    window.showVoiceCard = function() {
+      if (words.length === 0) return;
+      document.getElementById('voiceTargetHu').innerText = words[currentIndex].hu;
+      document.getElementById('voiceFeedback').innerText = "";
+    }
+
+    window.nextVoiceCard = function() {
+      if (words.length === 0) return;
+      currentIndex = (currentIndex + 1) % words.length;
+      window.showVoiceCard();
+    }
+
+    window.startListening = function() {
+      if (words.length === 0) return alert("Először töltsd be a szavakat!");
+      if (recognition) {
+        try { recognition.start(); } 
+        catch (e) { recognition.stop(); setTimeout(() => recognition.start(), 200); }
+      } else {
+        alert("A böngésződ nem támogatja a beépített beszédfelismerést.");
+      }
+    }
+
+    // 3. Fül logika (Párosító játék)
+    let matchCurrentItems = [];
+    let selectedEnIndex = null;
+    let selectedHuIndex = null;
+    let matchedPairsCount = 0;
+
+    window.initMatchGame = function() {
+      if (words.length < 4) return alert("Legalább 4 szó szükséges a párosító játékhoz!");
+      
+      let shuffledPool = [...words].sort(() => 0.5 - Math.random());
+      matchCurrentItems = shuffledPool.slice(0, 4).map(item => ({ ...item, matched: false, hidden: true }));
+      matchedPairsCount = 0;
+      selectedEnIndex = null;
+      selectedHuIndex = null;
+
+      window.renderMatchBoard();
+    }
+
+    window.renderMatchBoard = function() {
+      const container = document.getElementById('matchContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      let enCards = matchCurrentItems.map((item, idx) => ({ ...item, originalIdx: idx }));
+      let huCards = matchCurrentItems.map((item, idx) => ({ ...item, originalIdx: idx }));
+      
+      huCards.sort(() => 0.5 - Math.random());
+
+      let html = '<div class="flex flex-col gap-2">';
+      matchCurrentItems.forEach((item, idx) => {
+        let bgClass = item.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedEnIndex === idx ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
+        
+        html += `<div onclick="window.selectEn(${idx})" class="p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
+                  ${item.hidden ? '🔒 <i>(Kattints a hallgatáshoz)</i>' : `<span class="text-blue-300 font-bold">${item.en}</span>`}
+                 </div>`;
+      });
+      html += '</div><div class="flex flex-col gap-2">';
+
+      huCards.forEach((huItem) => {
+        let bgClass = huItem.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedHuIndex === huItem.originalIdx ? 'bg-amber-600 border-amber-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
+
+        html += `<div onclick="window.selectHu(${huItem.originalIdx})" class="p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
+                  ${huItem.text}
+                 </div>`;
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+
+    window.selectEn = function(idx) {
+      if (matchCurrentItems[idx].matched) return;
+      matchCurrentItems[idx].hidden = false;
+      window.speakWord(matchCurrentItems[idx].en);
+
+      selectedEnIndex = idx;
+      window.checkMatch();
+      window.renderMatchBoard();
+    }
+
+    window.selectHu = function(idx) {
+      if (matchCurrentItems[idx].matched) return;
+      selectedHuIndex = idx;
+      window.checkMatch();
+      window.renderMatchBoard();
+    }
+
+    window.speakWord = function(text) {
+      if ('speechSynthesis' in window) {
+        let utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    window.checkMatch = function() {
+      if (selectedEnIndex !== null && selectedHuIndex !== null) {
+        if (selectedEnIndex === selectedHuIndex) {
+          matchCurrentItems[selectedEnIndex].matched = true;
+          matchedPairsCount++;
+          
+          selectedEnIndex = null;
+          selectedHuIndex = null;
+
+          if (matchedPairsCount === 4) {
+            setTimeout(() => {
+              alert("Szép munka! Megvan mind a 4 pár. Új kör jön!");
+              window.initMatchGame();
+            }, 400);
+          }
+        } else {
+          setTimeout(() => {
+            selectedEnIndex = null;
+            selectedHuIndex = null;
+            window.renderMatchBoard();
+          }, 500);
+        }
+      }
+    }
+
+    // 4. Fül logika (Kvíz)
+    window.initQuiz = function() {
+      if (words.length < 4) return;
+      let currentQuizWord = words[Math.floor(Math.random() * words.length)];
+      document.getElementById('quizQuestion').innerText = currentQuizWord.hu;
+
+      let options = [currentQuizWord.en];
+      while (options.length < 4) {
+        let randomWord = words[Math.floor(Math.random() * words.length)].en;
+        if (!options.includes(randomWord)) options.push(randomWord);
+      }
+      options.sort(() => 0.5 - Math.random());
+
+      let optContainer = document.getElementById('quizOptions');
+      optContainer.innerHTML = '';
+      options.forEach(opt => {
+        optContainer.innerHTML += `<button onclick="window.checkQuiz('${opt}', '${currentQuizWord.en}')" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600">${opt}</button>`;
+      });
+    }
+
+    window.checkQuiz = function(selected, correct) {
+      if (selected === correct) {
+        alert("Helyes válasz! 🎉");
+        window.initQuiz();
+      } else {
+        alert(`Nem jó. A helyes válasz: ${correct}`);
+        window.initQuiz();
+      }
+    }
+  </script>
+</body>
+</html>
