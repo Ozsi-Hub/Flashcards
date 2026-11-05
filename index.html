@@ -303,7 +303,6 @@
 
       container.innerHTML = html;
 
-      // Eseménykezelők a dinamikus elemekre
       container.querySelectorAll('.en-card').forEach(el => {
         el.addEventListener('click', () => {
           let idx = parseInt(el.getAttribute('data-en-idx'));
@@ -403,7 +402,7 @@
       }
     }
 
-    // Gombok összekötése eseménykezelőkkel (Biztosíték, hogy ne legyen "not defined" hiba)
+    // Gombok összekötése eseménykezelőkkel DOM betöltődés után
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('loadBtn').addEventListener('click', loadWords);
       document.getElementById('tabBtn0').addEventListener('click', () => switchTab(0));
