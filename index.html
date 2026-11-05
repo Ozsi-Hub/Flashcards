@@ -49,7 +49,6 @@
         <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
       </div>
       
-      <!-- Súlyozott visszajelző gombok Flashcard alá -->
       <div id="cardRatingBox" class="hidden grid grid-cols-2 gap-2 mt-3">
         <button id="btnNotKnown" class="bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700 py-1.5 rounded-lg text-xs font-semibold transition">❌ Nem tudtam</button>
         <button id="btnKnown" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 py-1.5 rounded-lg text-xs font-semibold transition">✓ Tudtam</button>
@@ -80,7 +79,7 @@
 
     <!-- ================= 3. FÜL: PÁROSÍTÓ JÁTÉK ================= -->
     <div id="tabContent2" class="tab-content hidden">
-      <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra (felolvassa), majd válaszd ki a magyar párját!</div>
+      <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra, majd a magyar párjára!</div>
       <div class="grid grid-cols-2 gap-3 min-h-[180px]" id="matchContainer"></div>
       <button id="resetMatchBtn" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
     </div>
@@ -331,12 +330,13 @@
       }
     }
 
-    // 3. FÜL: PÁROSÍTÓ JÁTÉK LOGIKA
-    let matchCurrentItems = [];
-    let selectedEnIndex = null;
-    let selectedHuIndex = null;
-    let matchedPairsCount = 0;
-    let wrongHuIndex = null; // Ideiglenes piros kerethez
+    // 3. FÜL: PÁROSÍTÓ JÁTÉK JAVÍTOTT LOGIKA
+    let matchEnList = [];
+    let matchHuList = [];
+    let selectedEnItem = null;
+    let selectedHuItem = null;
+    let matchPairsLeft = 4;
+    let wrongHuText = null;
 
     function initMatchGame() {
       if (words.length < 4) return alert("Legalább 4 szó szükséges a párosító játékhoz!");
@@ -345,11 +345,19 @@
         ? [...words].sort((a, b) => b.weight - a.weight) 
         : [...words].sort(() => 0.5 - Math.random());
 
-      matchCurrentItems = pool.slice(0, 4).map(item => ({ ...item, matched: false }));
-      matchedPairsCount = 0;
-      selectedEnIndex = null;
-      selectedHuIndex = null;
-      wrongHuIndex = null;
+      let selected4 = pool.slice(0, 4);
+
+      // Külön keverjük az angol és magyar listákat, hogy ne legyenek sorban
+      matchEnList = selected4.map(item => ({ en: item.en, hu: item.hu, matched: false, id: Math.random() }));
+      matchHuList = selected4.map(item => ({ en: item.en, hu: item.hu, matched: false, id: Math.random() }));
+      
+      matchEnList.sort(() => 0.5 - Math.random());
+      matchHuList.sort(() => 0.5 - Math.random());
+
+      selectedEnItem = null;
+      selectedHuItem = null;
+      wrongHuText = null;
+      matchPairsLeft = 4;
 
       renderMatchBoard();
     }
@@ -359,38 +367,34 @@
       if (!container) return;
       container.innerHTML = '';
 
-      let huCards = matchCurrentItems.map((item, idx) => ({ ...item, originalIdx: idx }));
-      huCards.sort(() => 0.5 - Math.random());
-
       let html = '<div class="flex flex-col gap-2">';
-      matchCurrentItems.forEach((item, idx) => {
-        // Ha helyes pár, zöld keret + megjelenik az angol szó. Ha nem, csak a lakat ikon látszik.
+      matchEnList.forEach((item, idx) => {
         let bgClass = item.matched 
           ? 'bg-emerald-950 border-emerald-500 text-emerald-200' 
-          : (selectedEnIndex === idx ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
+          : (selectedEnItem === item ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
         
         let content = item.matched 
           ? `<span class="text-emerald-300 font-bold">${item.en}</span>` 
           : `🔒 <i>(Kattints a hangért)</i>`;
 
-        html += `<div data-en-idx="${idx}" class="en-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
+        html += `<div data-en-index="${idx}" class="en-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
                   ${content}
                  </div>`;
       });
       html += '</div><div class="flex flex-col gap-2">';
 
-      huCards.forEach((huItem) => {
+      matchHuList.forEach((item, idx) => {
         let bgClass = 'bg-slate-700 border-slate-600 hover:bg-slate-650';
-        if (huItem.matched) {
+        if (item.matched) {
           bgClass = 'bg-emerald-950 border-emerald-500 text-emerald-200';
-        } else if (wrongHuIndex === huItem.originalIdx) {
-          bgClass = 'bg-red-950 border-red-500 text-red-200'; // Ideiglenes piros keret hibánál
-        } else if (selectedHuIndex === huItem.originalIdx) {
+        } else if (wrongHuText === item.hu) {
+          bgClass = 'bg-red-950 border-red-500 text-red-200 animate-pulse'; // Piros keret hibánál
+        } else if (selectedHuItem === item) {
           bgClass = 'bg-amber-600 border-amber-400';
         }
 
-        html += `<div data-hu-idx="${huItem.originalIdx}" class="hu-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
-                  ${huItem.text}
+        html += `<div data-hu-index="${idx}" class="hu-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
+                  ${item.hu}
                  </div>`;
       });
       html += '</div>';
@@ -399,33 +403,31 @@
 
       container.querySelectorAll('.en-card').forEach(el => {
         el.addEventListener('click', () => {
-          let idx = parseInt(el.getAttribute('data-en-idx'));
-          selectEn(idx);
+          let idx = parseInt(el.getAttribute('data-en-index'));
+          selectEnItem(matchEnList[idx]);
         });
       });
 
       container.querySelectorAll('.hu-card').forEach(el => {
         el.addEventListener('click', () => {
-          let idx = parseInt(el.getAttribute('data-hu-idx'));
-          selectHu(idx);
+          let idx = parseInt(el.getAttribute('data-hu-index'));
+          selectHuItem(matchHuList[idx]);
         });
       });
     }
 
-    function selectEn(idx) {
-      if (matchCurrentItems[idx].matched) return;
-      // Nem fedjük fel az angol szót, csak felolvassuk
-      speakWord(matchCurrentItems[idx].en);
-
-      selectedEnIndex = idx;
-      checkMatch();
+    function selectEnItem(item) {
+      if (item.matched) return;
+      speakWord(item.en); // Csak felolvassa, de nem mutatja meg a szót[cite: 2]
+      selectedEnItem = item;
+      checkMatchLogic();
       renderMatchBoard();
     }
 
-    function selectHu(idx) {
-      if (matchCurrentItems[idx].matched) return;
-      selectedHuIndex = idx;
-      checkMatch();
+    function selectHuItem(item) {
+      if (item.matched) return;
+      selectedHuItem = item;
+      checkMatchLogic();
       renderMatchBoard();
     }
 
@@ -437,39 +439,48 @@
       }
     }
 
-    function checkMatch() {
-      if (selectedEnIndex !== null && selectedHuIndex !== null) {
-        if (selectedEnIndex === selectedHuIndex) {
-          // Helyes találat: mindkettő zöld lesz, és az angol szó előbújik
-          matchCurrentItems[selectedEnIndex].matched = true;
-          matchedPairsCount++;
-          
-          matchCurrentItems[selectedEnIndex].weight = Math.max(1, matchCurrentItems[selectedEnIndex].weight - 1);
-          saveWeightsToLocalStorage();
+    function checkMatchLogic() {
+      if (selectedEnItem !== null && selectedHuItem !== null) {
+        // Ha az angol kártya 'hu' tulajdonsága megegyezik a kiválasztott magyar kártya szövegével
+        if (selectedEnItem.hu === selectedHuItem.hu) {
+          selectedEnItem.matched = true;
+          selectedHuItem.matched = true;
+          matchPairsLeft--;
 
-          selectedEnIndex = null;
-          selectedHuIndex = null;
+          // Súly csökkentése ha okos módban vagyunk
+          let originalWord = words.find(w => w.en === selectedEnItem.en);
+          if (originalWord) {
+            originalWord.weight = Math.max(1, originalWord.weight - 1);
+            saveWeightsToLocalStorage();
+          }
 
-          if (matchedPairsCount === 4) {
+          selectedEnItem = null;
+          selectedHuItem = null;
+
+          if (matchPairsLeft === 0) {
             setTimeout(() => {
               alert("Szép munka! Megvan mind a 4 pár. Új kör jön!");
               initMatchGame();
             }, 400);
           }
         } else {
-          // Rossz találat: a magyar szó piros keretet kap, amit 2mp múlva eltüntetünk
-          wrongHuIndex = selectedHuIndex;
-          matchCurrentItems[selectedEnIndex].weight += 2;
-          saveWeightsToLocalStorage();
+          // Rossz párosítás: a magyar kártya piros keretet kap 2 másodpercre
+          wrongHuText = selectedHuItem.hu;
+          
+          let originalWord = words.find(w => w.en === selectedEnItem.en);
+          if (originalWord) {
+            originalWord.weight += 2;
+            saveWeightsToLocalStorage();
+          }
 
           renderMatchBoard();
 
           setTimeout(() => {
-            wrongHuIndex = null;
-            selectedEnIndex = null;
-            selectedHuIndex = null;
+            wrongHuText = null;
+            selectedEnItem = null;
+            selectedHuItem = null;
             renderMatchBoard();
-          }, 2000); // 2 másodperc piros keret
+          }, 2000); // 2 másodperces piros keret
           return;
         }
       }
