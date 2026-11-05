@@ -15,36 +15,36 @@
       <h1 class="text-base font-bold text-center mb-2 text-blue-400">📚 Szószedet Tanuló App</h1>
       <input type="text" id="csvUrl" placeholder="Illeszd be a Google Sheet CSV URL-t" 
              class="w-full text-xs p-2 rounded bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:border-blue-500">
-      <button onclick="loadWords()" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
+      <button id="loadBtn" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
     </div>
 
     <!-- 4 Lapfül Ikonokkal -->
     <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl mb-4 border border-slate-700">
-      <button onclick="switchTab(0)" id="tabBtn0" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex flex-col items-center">
+      <button id="tabBtn0" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex flex-col items-center">
         <span>🃏</span><span class="text-[10px]">Kártya</span>
       </button>
-      <button onclick="switchTab(1)" id="tabBtn1" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button id="tabBtn1" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🎤</span><span class="text-[10px]">Kiejtés</span>
       </button>
-      <button onclick="switchTab(2)" id="tabBtn2" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button id="tabBtn2" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🧩</span><span class="text-[10px]">Párosító</span>
       </button>
-      <button onclick="switchTab(3)" id="tabBtn3" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+      <button id="tabBtn3" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
         <span>🧠</span><span class="text-[10px]">Kvíz</span>
       </button>
     </div>
 
     <!-- ================= 1. FÜL: FLASHCARD ================= -->
     <div id="tabContent0" class="tab-content">
-      <div id="card" onclick="flipCard()" class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
+      <div id="card" class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
         <span id="cardLabel" class="text-xs text-blue-400 mb-1 uppercase tracking-wider">Angol szó:</span>
         <span id="cardText" class="text-2xl font-bold text-center">Töltsd be a szavakat</span>
         <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
       </div>
       <div class="flex justify-between items-center mt-4">
-        <button onclick="prevCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
+        <button id="prevCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
         <span id="cardCounter" class="text-xs text-slate-400">0 / 0</span>
-        <button onclick="nextCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
+        <button id="nextCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
       </div>
     </div>
 
@@ -57,10 +57,10 @@
       </div>
       <div id="voiceFeedback" class="h-8 mt-2 text-xs font-semibold flex items-center justify-center px-1 text-center"></div>
       <div class="flex justify-center items-center gap-4 mt-2">
-        <button onclick="startListening()" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center scale-110">
+        <button id="micBtn" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center scale-110">
           🎤
         </button>
-        <button onclick="nextVoiceCard()" class="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl text-xs font-medium transition">Következő ➔</button>
+        <button id="nextVoiceBtn" class="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl text-xs font-medium transition">Következő ➔</button>
       </div>
     </div>
 
@@ -68,9 +68,9 @@
     <div id="tabContent2" class="tab-content hidden">
       <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra (felolvassa), majd válaszd ki a magyar párját!</div>
       <div class="grid grid-cols-2 gap-3 min-h-[190px]" id="matchContainer">
-        <!-- Ide generálódik dinamikusan -->
+        <!-- Dinamikus tartalom -->
       </div>
-      <button onclick="initMatchGame()" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
+      <button id="resetMatchBtn" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
     </div>
 
     <!-- ================= 4. FÜL: KVÍZ ================= -->
@@ -118,7 +118,7 @@
             fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-green-400";
             fb.innerText = `✓ Helyes! ("${spokenText}")`;
           }
-          setTimeout(() => { window.nextVoiceCard(); }, 1500);
+          setTimeout(() => { nextVoiceCard(); }, 1500);
         } else {
           if (fb) {
             fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-red-400";
@@ -134,7 +134,7 @@
     }
 
     // Fül váltás logika
-    window.switchTab = function(index) {
+    function switchTab(index) {
       for (let i = 0; i < 4; i++) {
         document.getElementById(`tabContent${i}`).classList.add('hidden');
         document.getElementById(`tabBtn${i}`).className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center";
@@ -144,12 +144,12 @@
       const activeColors = ['bg-blue-600 text-white', 'bg-purple-600 text-white', 'bg-amber-600 text-white', 'bg-emerald-600 text-white'];
       document.getElementById(`tabBtn${index}`).className = `py-2 text-xs font-semibold rounded-lg ${activeColors[index]} transition flex flex-col items-center`;
 
-      if (index === 2 && words.length > 0) window.initMatchGame();
-      if (index === 3 && words.length > 0) window.initQuiz();
+      if (index === 2 && words.length > 0) initMatchGame();
+      if (index === 3 && words.length > 0) initQuiz();
     }
 
-    // CSV Betöltés biztonságos ciklussal
-    window.loadWords = async function() {
+    // CSV Betöltés
+    async function loadWords() {
       const inputUrl = document.getElementById('csvUrl').value.trim();
       if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
 
@@ -192,8 +192,8 @@
         }
 
         currentIndex = 0;
-        window.showCard();
-        window.showVoiceCard();
+        showCard();
+        showVoiceCard();
         alert(`Sikeresen betöltve: ${words.length} szó!`);
       } catch (err) {
         console.error(err);
@@ -202,7 +202,7 @@
     }
 
     // 1. Fül logika (Flashcard)
-    window.showCard = function() {
+    function showCard() {
       if (words.length === 0) return;
       isFlipped = false;
       document.getElementById('cardLabel').innerText = "Angol szó:";
@@ -211,7 +211,7 @@
       document.getElementById('cardCounter').innerText = `${currentIndex + 1} / ${words.length}`;
     }
 
-    window.flipCard = function() {
+    function flipCard() {
       if (words.length === 0) return;
       isFlipped = !isFlipped;
       document.getElementById('cardLabel').innerText = isFlipped ? "Magyar jelentés:" : "Angol szó:";
@@ -219,32 +219,32 @@
       document.getElementById('cardHint').innerText = isFlipped ? "(Kattints az angolhoz)" : "(Kattints a fordításhoz)";
     }
 
-    window.nextCard = function() {
+    function nextCard() {
       if (words.length === 0) return;
       currentIndex = (currentIndex + 1) % words.length;
-      window.showCard();
+      showCard();
     }
 
-    window.prevCard = function() {
+    function prevCard() {
       if (words.length === 0) return;
       currentIndex = (currentIndex - 1 + words.length) % words.length;
-      window.showCard();
+      showCard();
     }
 
     // 2. Fül logika (Kiejtés)
-    window.showVoiceCard = function() {
+    function showVoiceCard() {
       if (words.length === 0) return;
       document.getElementById('voiceTargetHu').innerText = words[currentIndex].hu;
       document.getElementById('voiceFeedback').innerText = "";
     }
 
-    window.nextVoiceCard = function() {
+    function nextVoiceCard() {
       if (words.length === 0) return;
       currentIndex = (currentIndex + 1) % words.length;
-      window.showVoiceCard();
+      showVoiceCard();
     }
 
-    window.startListening = function() {
+    function startListening() {
       if (words.length === 0) return alert("Először töltsd be a szavakat!");
       if (recognition) {
         try { recognition.start(); } 
@@ -260,7 +260,7 @@
     let selectedHuIndex = null;
     let matchedPairsCount = 0;
 
-    window.initMatchGame = function() {
+    function initMatchGame() {
       if (words.length < 4) return alert("Legalább 4 szó szükséges a párosító játékhoz!");
       
       let shuffledPool = [...words].sort(() => 0.5 - Math.random());
@@ -269,10 +269,10 @@
       selectedEnIndex = null;
       selectedHuIndex = null;
 
-      window.renderMatchBoard();
+      renderMatchBoard();
     }
 
-    window.renderMatchBoard = function() {
+    function renderMatchBoard() {
       const container = document.getElementById('matchContainer');
       if (!container) return;
       container.innerHTML = '';
@@ -286,7 +286,7 @@
       matchCurrentItems.forEach((item, idx) => {
         let bgClass = item.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedEnIndex === idx ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
         
-        html += `<div onclick="window.selectEn(${idx})" class="p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
+        html += `<div data-en-idx="${idx}" class="en-card p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
                   ${item.hidden ? '🔒 <i>(Kattints a hallgatáshoz)</i>' : `<span class="text-blue-300 font-bold">${item.en}</span>`}
                  </div>`;
       });
@@ -295,33 +295,48 @@
       huCards.forEach((huItem) => {
         let bgClass = huItem.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedHuIndex === huItem.originalIdx ? 'bg-amber-600 border-amber-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
 
-        html += `<div onclick="window.selectHu(${huItem.originalIdx})" class="p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
+        html += `<div data-hu-idx="${huItem.originalIdx}" class="hu-card p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
                   ${huItem.text}
                  </div>`;
       });
       html += '</div>';
 
       container.innerHTML = html;
+
+      // Eseménykezelők a dinamikus elemekre
+      container.querySelectorAll('.en-card').forEach(el => {
+        el.addEventListener('click', () => {
+          let idx = parseInt(el.getAttribute('data-en-idx'));
+          selectEn(idx);
+        });
+      });
+
+      container.querySelectorAll('.hu-card').forEach(el => {
+        el.addEventListener('click', () => {
+          let idx = parseInt(el.getAttribute('data-hu-idx'));
+          selectHu(idx);
+        });
+      });
     }
 
-    window.selectEn = function(idx) {
+    function selectEn(idx) {
       if (matchCurrentItems[idx].matched) return;
       matchCurrentItems[idx].hidden = false;
-      window.speakWord(matchCurrentItems[idx].en);
+      speakWord(matchCurrentItems[idx].en);
 
       selectedEnIndex = idx;
-      window.checkMatch();
-      window.renderMatchBoard();
+      checkMatch();
+      renderMatchBoard();
     }
 
-    window.selectHu = function(idx) {
+    function selectHu(idx) {
       if (matchCurrentItems[idx].matched) return;
       selectedHuIndex = idx;
-      window.checkMatch();
-      window.renderMatchBoard();
+      checkMatch();
+      renderMatchBoard();
     }
 
-    window.speakWord = function(text) {
+    function speakWord(text) {
       if ('speechSynthesis' in window) {
         let utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
@@ -329,7 +344,7 @@
       }
     }
 
-    window.checkMatch = function() {
+    function checkMatch() {
       if (selectedEnIndex !== null && selectedHuIndex !== null) {
         if (selectedEnIndex === selectedHuIndex) {
           matchCurrentItems[selectedEnIndex].matched = true;
@@ -341,21 +356,21 @@
           if (matchedPairsCount === 4) {
             setTimeout(() => {
               alert("Szép munka! Megvan mind a 4 pár. Új kör jön!");
-              window.initMatchGame();
+              initMatchGame();
             }, 400);
           }
         } else {
           setTimeout(() => {
             selectedEnIndex = null;
             selectedHuIndex = null;
-            window.renderMatchBoard();
+            renderMatchBoard();
           }, 500);
         }
       }
     }
 
     // 4. Fül logika (Kvíz)
-    window.initQuiz = function() {
+    function initQuiz() {
       if (words.length < 4) return;
       let currentQuizWord = words[Math.floor(Math.random() * words.length)];
       document.getElementById('quizQuestion').innerText = currentQuizWord.hu;
@@ -370,19 +385,41 @@
       let optContainer = document.getElementById('quizOptions');
       optContainer.innerHTML = '';
       options.forEach(opt => {
-        optContainer.innerHTML += `<button onclick="window.checkQuiz('${opt}', '${currentQuizWord.en}')" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600">${opt}</button>`;
+        let btn = document.createElement('button');
+        btn.className = "p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600";
+        btn.innerText = opt;
+        btn.addEventListener('click', () => checkQuiz(opt, currentQuizWord.en));
+        optContainer.appendChild(btn);
       });
     }
 
-    window.checkQuiz = function(selected, correct) {
+    function checkQuiz(selected, correct) {
       if (selected === correct) {
         alert("Helyes válasz! 🎉");
-        window.initQuiz();
+        initQuiz();
       } else {
         alert(`Nem jó. A helyes válasz: ${correct}`);
-        window.initQuiz();
+        initQuiz();
       }
     }
+
+    // Gombok összekötése eseménykezelőkkel (Biztosíték, hogy ne legyen "not defined" hiba)
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('loadBtn').addEventListener('click', loadWords);
+      document.getElementById('tabBtn0').addEventListener('click', () => switchTab(0));
+      document.getElementById('tabBtn1').addEventListener('click', () => switchTab(1));
+      document.getElementById('tabBtn2').addEventListener('click', () => switchTab(2));
+      document.getElementById('tabBtn3').addEventListener('click', () => switchTab(3));
+
+      document.getElementById('card').addEventListener('click', flipCard);
+      document.getElementById('prevCardBtn').addEventListener('click', prevCard);
+      document.getElementById('nextCardBtn').addEventListener('click', nextCard);
+
+      document.getElementById('micBtn').addEventListener('click', startListening);
+      document.getElementById('nextVoiceBtn').addEventListener('click', nextVoiceCard);
+
+      document.getElementById('resetMatchBtn').addEventListener('click', initMatchGame);
+    });
   </script>
 </body>
 </html>
