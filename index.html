@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Szókártya & Kiejtés Gyakorló</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700 text-center">
+    <!-- Google Sheet CSV URL Beállítás -->
+    <div class="mb-4">
+      <input type="text" id="csvUrl" placeholder="https://docs.google.com/spreadsheets/d/12qGMEDvkU001ukUDi2q8tRtdYXKzwm97u89hddvoYmQ/edit?usp=sharing" 
+             class="w-full text-xs p-2 rounded bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:border-blue-500">
+      <button onclick="loadWords()" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
+    </div>
+
+    <hr class="border-slate-700 my-4">
+
+    <!-- Szókártya -->
+    <div id="card" onclick="flipCard()" class="h-44 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
+      <span id="cardText" class="text-3xl font-bold">Kattints a betöltéshez</span>
+      <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
+    </div>
+
+    <!-- Visszajelzés a kiejtésről -->
+    <div id="feedback" class="h-8 mt-3 text-sm font-semibold flex items-center justify-center"></div>
+
+    <!-- Vezérlőgombok -->
+    <div class="flex justify-center gap-4 mt-4">
+      <!-- Mikrofon Gomb -->
+      <button id="micBtn" onclick="startListening()" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center">
+        🎤
+      </button>
+
+      <button onclick="nextCard()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-medium transition">
+        Következő ➔
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let words = [];
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    // Web Speech API előkészítése
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US'; // Angol beszéd felismerése
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        showFeedback("Hallgatlak... Mondd ki a szót!", "text-yellow-400");
+      };
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+        const targetWord = words[currentIndex]?.en.toLowerCase().trim();
+
+        if (spokenText === targetWord) {
+          showFeedback(`✓ Helyes! ("${spokenText}")`, "text-green-400");
+        } else {
+          showFeedback(`✗ Hallott: "${spokenText}". Próbáld újra!`, "text-red-400");
+        }
+      };
+
+      recognition.onerror = (event) => {
+        showFeedback("Hiba történt a mikrofon használatakor.", "text-red-400");
+      };
+    } else {
+      alert("A böngésződ nem támogatja a beépített beszédfelismerést. Használj Chrome-ot vagy Safari-t!");
+    }
+
+    // Szavak betöltése CSV-ből
+    async function loadWords() {
+      const url = document.getElementById('csvUrl').value;
+      if (!url) return alert("Kérlek adj meg egy valid CSV URL-t!");
+
+      try {
+        const response = await fetch(url);
+        const data = await response.text();
+        const rows = data.split('\n').filter(r => r.trim() !== '');
+
+        words = rows.map(row => {
+          const cols = row.split(',');
+          return { en: cols[0]?.trim(), hu: cols[1]?.trim() };
+        });
+
+        currentIndex = 0;
+        showCard();
+        showFeedback("Szavak sikeresen betöltve!", "text-green-400");
+      } catch (err) {
+        showFeedback("Nem sikerült betölteni a CSV-t.", "text-red-400");
+      }
+    }
+
+    function showCard() {
+      if (words.length === 0) return;
+      isFlipped = false;
+      document.getElementById('cardText').innerText = words[currentIndex].en;
+      document.getElementById('cardHint').innerText = "(Kattints a magyar fordításhoz)";
+    }
+
+    function flipCard() {
+      if (words.length === 0) return;
+      isFlipped = !isFlipped;
+      document.getElementById('cardText').innerText = isFlipped ? words[currentIndex].hu : words[currentIndex].en;
+      document.getElementById('cardHint').innerText = isFlipped ? "(Angol)" : "(Magyar)";
+    }
+
+    function nextCard() {
+      if (words.length === 0) return;
+      currentIndex = (currentIndex + 1) % words.length;
+      showCard();
+      document.getElementById('feedback').innerText = "";
+    }
+
+    function startListening() {
+      if (words.length === 0) return alert("Először töltsd be a szavakat!");
+      if (recognition) recognition.start();
+    }
+
+    function showFeedback(text, colorClass) {
+      const fb = document.getElementById('feedback');
+      fb.className = `h-8 mt-3 text-sm font-semibold flex items-center justify-center ${colorClass}`;
+      fb.innerText = text;
+    }
+  </script>
+</body>
+</html>
