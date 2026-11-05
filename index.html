@@ -3,41 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Szókártya & Kiejtés Gyakorló</title>
+  <title>Interaktív Szókártya & Nyelvtanuló App</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-start p-4">
 
-  <div class="max-w-md w-full bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700 text-center">
+  <div class="max-w-md w-full bg-slate-800 rounded-2xl p-5 shadow-xl border border-slate-700 mt-2">
+    
     <!-- Google Sheet CSV URL Beállítás -->
-    <div class="mb-4">
+    <div class="mb-3">
+      <h1 class="text-base font-bold text-center mb-2 text-blue-400">📚 Szószedet Tanuló App</h1>
       <input type="text" id="csvUrl" placeholder="Illeszd be a Google Sheet CSV URL-t" 
              class="w-full text-xs p-2 rounded bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:border-blue-500">
       <button onclick="loadWords()" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
     </div>
 
-    <hr class="border-slate-700 my-4">
-
-    <!-- Szókártya -->
-    <div id="card" onclick="flipCard()" class="h-44 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
-      <span id="cardText" class="text-3xl font-bold">Kattints a betöltéshez</span>
-      <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
-    </div>
-
-    <!-- Visszajelzés a kiejtésről -->
-    <div id="feedback" class="h-8 mt-3 text-sm font-semibold flex items-center justify-center"></div>
-
-    <!-- Vezérlőgombok -->
-    <div class="flex justify-center gap-4 mt-4">
-      <!-- Mikrofon Gomb -->
-      <button id="micBtn" onclick="startListening()" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center">
-        🎤
+    <!-- 4 Lapfül Ikonokkal -->
+    <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl mb-4 border border-slate-700">
+      <button onclick="switchTab(0)" id="tabBtn0" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex flex-col items-center">
+        <span>🃏</span><span class="text-[10px]">Kártya</span>
       </button>
-
-      <button onclick="nextCard()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-medium transition">
-        Következő ➔
+      <button onclick="switchTab(1)" id="tabBtn1" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+        <span>🎤</span><span class="text-[10px]">Kiejtés</span>
+      </button>
+      <button onclick="switchTab(2)" id="tabBtn2" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+        <span>🧩</span><span class="text-[10px]">Párosító</span>
+      </button>
+      <button onclick="switchTab(3)" id="tabBtn3" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center">
+        <span>🧠</span><span class="text-[10px]">Kvíz</span>
       </button>
     </div>
+
+    <!-- ================= 1. FÜL: FLASHCARD ================= -->
+    <div id="tabContent0" class="tab-content">
+      <div id="card" onclick="flipCard()" class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
+        <span id="cardLabel" class="text-xs text-blue-400 mb-1 uppercase tracking-wider">Angol szó:</span>
+        <span id="cardText" class="text-2xl font-bold text-center">Töltsd be a szavakat</span>
+        <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
+      </div>
+      <div class="flex justify-between items-center mt-4">
+        <button onclick="prevCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
+        <span id="cardCounter" class="text-xs text-slate-400">0 / 0</span>
+        <button onclick="nextCard()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
+      </div>
+    </div>
+
+    <!-- ================= 2. FÜL: KIEJTÉS (MIKROFONOS) ================= -->
+    <div id="tabContent1" class="tab-content hidden">
+      <div class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 shadow-inner">
+        <span class="text-xs text-purple-400 mb-1 uppercase tracking-wider">Mondd ki angolul:</span>
+        <span id="voiceTargetHu" class="text-2xl font-bold text-center">...</span>
+        <span id="voiceHint" class="text-xs text-slate-400 mt-2">Nyomd meg a mikrofont!</span>
+      </div>
+      <div id="voiceFeedback" class="h-8 mt-2 text-xs font-semibold flex items-center justify-center px-1 text-center"></div>
+      <div class="flex justify-center items-center gap-4 mt-2">
+        <button onclick="startListening()" class="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-full shadow-lg transition flex items-center justify-center scale-110">
+          🎤
+        </button>
+        <button onclick="nextVoiceCard()" class="bg-slate-700 hover:bg-slate-600 px-5 py-2.5 rounded-xl text-xs font-medium transition">Következő ➔</button>
+      </div>
+    </div>
+
+    <!-- ================= 3. FÜL: PÁROSÍTÓ JÁTÉK ================= -->
+    <div id="tabContent2" class="tab-content hidden">
+      <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra (felolvassa), majd válaszd ki a magyar párját!</div>
+      <div class="grid grid-cols-2 gap-3 min-h-[190px]" id="matchContainer">
+        <!-- Ide generálódik dinamikusan a 4 angol és 4 magyar doboz -->
+      </div>
+      <button onclick="initMatchGame()" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
+    </div>
+
+    <!-- ================= 4. FÜL: KVÍZ ================= -->
+    <div id="tabContent3" class="tab-content hidden">
+      <div class="h-32 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-3 shadow-inner">
+        <span class="text-xs text-emerald-400 mb-1">Mit jelent ez angolul?</span>
+        <span id="quizQuestion" class="text-xl font-bold text-center">...</span>
+      </div>
+      <div id="quizOptions" class="grid grid-cols-2 gap-2 mt-3">
+        <!-- Opciók gombok -->
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -45,17 +91,18 @@
     let currentIndex = 0;
     let isFlipped = false;
 
-    // Web Speech API előkészítése
+    // Beszédfelismerés előkészítése
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
 
     if (SpeechRecognition) {
       recognition = new SpeechRecognition();
-      recognition.lang = 'en-US'; // Angol beszéd felismerése
+      recognition.lang = 'en-US';
       recognition.interimResults = false;
 
       recognition.onstart = () => {
-        showFeedback("Hallgatlak... Mondd ki a szót!", "text-yellow-400");
+        document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-yellow-400";
+        document.getElementById('voiceFeedback').innerText = "Hallgatlak... Besélj!";
       };
 
       recognition.onresult = (event) => {
@@ -63,119 +110,64 @@
         const targetWord = words[currentIndex]?.en.toLowerCase().trim();
 
         if (spokenText === targetWord) {
-          showFeedback(`✓ Helyes! ("${spokenText}")`, "text-green-400");
+          document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-green-400";
+          document.getElementById('voiceFeedback').innerText = `✓ Helyes! ("${spokenText}")`;
+          setTimeout(() => { nextVoiceCard(); }, 1500);
         } else {
-          showFeedback(`✗ Hallott: "${spokenText}". Próbáld újra!`, "text-red-400");
+          document.getElementById('voiceFeedback').className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-red-400";
+          document.getElementById('voiceFeedback').innerHTML = `✗ Hallott: "${spokenText}". Helyes: <b>${words[currentIndex].en}</b>`;
         }
       };
 
-      recognition.onerror = (event) => {
-        showFeedback("Hiba történt a mikrofon használatakor.", "text-red-400");
+      recognition.onerror = () => {
+        document.getElementById('voiceFeedback').innerText = "Nem hallottam tisztán, próbáld újra.";
       };
-    } else {
-      alert("A böngésződ nem támogatja a beépített beszédfelismerést. Használj Chrome-ot vagy Safari-t!");
     }
 
-    // Szavak betöltése CSV-ből
+    // Fül váltás logika
+    function switchTab(index) {
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`tabContent${i}`).classList.add('hidden');
+        document.getElementById(`tabBtn${i}`).className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex flex-col items-center";
+      }
+      document.getElementById(`tabContent${index}`).classList.remove('hidden');
+      
+      const activeColors = ['bg-blue-600 text-white', 'bg-purple-600 text-white', 'bg-amber-600 text-white', 'bg-emerald-600 text-white'];
+      document.getElementById(`tabBtn${index}`).className = `py-2 text-xs font-semibold rounded-lg ${activeColors[index]} transition flex flex-col items-center`;
+
+      if (index === 2 && words.length > 0) initMatchGame();
+      if (index === 3 && words.length > 0) initQuiz();
+    }
+
+    // CSV Betöltés biztonságos ciklussal
     async function loadWords() {
-    const inputUrl = document.getElementById('csvUrl').value.trim();
-    if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
-  
-    let csvUrl = inputUrl;
-    if (csvUrl.includes('/edit')) {
-      csvUrl = csvUrl.replace(/\/edit.*$/, '/export?format=csv');
-    }
-  
-    try {
-      const response = await fetch(csvUrl);
-      if (!response.ok) throw new Error("Hálózati hiba: " + response.status);
-      
-      const data = await response.text();
-      
-      if (data.trim().startsWith('<!DOCTYPE html>')) {
-        alert("Hiba: A táblázat nem nyilvános! (A Google bejelentkező oldalát kaptuk meg).");
-        return;
+      const inputUrl = document.getElementById('csvUrl').value.trim();
+      if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
+
+      let csvUrl = inputUrl;
+      if (csvUrl.includes('/edit')) {
+        csvUrl = csvUrl.replace(/\/edit.*$/, '/export?format=csv');
       }
-  
-      const rows = data.split('\n');
-      let validWords = [];
-      let i = 0;
-      let safetyCounter = 0;
-      const maxSafetyLimit = 5000; // Végtelen ciklus elleni védelem maximális iteráció
-  
-      // Biztonságos iteráció a dokumentum végéig
-      while (i < rows.length && safetyCounter < maxSafetyLimit) {
-        safetyCounter++;
-        const currentRow = rows[i];
-        i++;
-  
-        // Ha a sor üres vagy csak szóközöket tartalmaz, lépjünk a következőre
-        if (!currentRow || currentRow.trim() === '') {
-          continue;
+
+      try {
+        const response = await fetch(csvUrl);
+        if (!response.ok) throw new Error("Hálózati hiba");
+        
+        const data = await response.text();
+        if (data.trim().startsWith('<!DOCTYPE html>')) {
+          alert("Hiba: A Google Sheet nem nyilvános! (Közzététel szükséges)");
+          return;
         }
-  
-        // Oszlopok szétbontása CSV-szerűen
-        const cols = currentRow.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        const en = cols[0]?.replace(/"/g, '').trim();
-        const hu = cols[1]?.replace(/"/g, '').trim();
-  
-        // Ha az angol vagy a magyar szó hiányzik (üres cella), ugorjuk át
-        if (!en || !hu) {
-          console.log(`Hiányos adat a(z) ${i}. sorban, kihagyva.`);
-          continue;
-        }
-  
-        // Ha mindkettő megvan, adjuk hozzá a listához
-        validWords.push({ en, hu });
-      }
-  
-      words = validWords;
-  
-      if (words.length === 0) {
-        alert("Nem találtunk érvényes szavakat a táblázatban. Ellenőrizd, hogy az 1. és 2. oszlopban vannak-e adatok.");
-        return;
-      }
-  
-      currentIndex = 0;
-      showCard();
-      showFeedback(`Sikeresen betöltve: ${words.length} szó`, "text-green-400");
-    } catch (err) {
-      console.error(err);
-      showFeedback("Nem sikerült betölteni a CSV-t. Nézd meg a konzolt!", "text-red-400");
-    }
-  }
 
-    function showCard() {
-      if (words.length === 0) return;
-      isFlipped = false;
-      document.getElementById('cardText').innerText = words[currentIndex].en;
-      document.getElementById('cardHint').innerText = "(Kattints a magyar fordításhoz)";
-    }
+        const rows = data.split('\n');
+        let validWords = [];
+        let i = 0;
+        let safetyCounter = 0;
 
-    function flipCard() {
-      if (words.length === 0) return;
-      isFlipped = !isFlipped;
-      document.getElementById('cardText').innerText = isFlipped ? words[currentIndex].hu : words[currentIndex].en;
-      document.getElementById('cardHint').innerText = isFlipped ? "(Angol)" : "(Magyar)";
-    }
+        while (i < rows.length && safetyCounter < 5000) {
+          safetyCounter++;
+          const currentRow = rows[i++];
+          if (!currentRow || currentRow.trim() === '') continue;
 
-    function nextCard() {
-      if (words.length === 0) return;
-      currentIndex = (currentIndex + 1) % words.length;
-      showCard();
-      document.getElementById('feedback').innerText = "";
-    }
-
-    function startListening() {
-      if (words.length === 0) return alert("Először töltsd be a szavakat!");
-      if (recognition) recognition.start();
-    }
-
-    function showFeedback(text, colorClass) {
-      const fb = document.getElementById('feedback');
-      fb.className = `h-8 mt-3 text-sm font-semibold flex items-center justify-center ${colorClass}`;
-      fb.innerText = text;
-    }
-  </script>
-</body>
-</html>
+          const cols = currentRow.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+          const en = cols[0]?.replace(/"/g, '').trim();
