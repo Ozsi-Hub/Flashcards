@@ -78,51 +78,72 @@
 
     // Szavak betöltése CSV-ből
     async function loadWords() {
-  const inputUrl = document.getElementById('csvUrl').value.trim();
-  if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
-
-  // Ha a felhasználó a sima /edit linket adta volna meg, próbáljuk meg átalakítani CSV export linkké
-  let csvUrl = inputUrl;
-  if (csvUrl.includes('/edit')) {
-    csvUrl = csvUrl.replace(/\/edit.*$/, '/export?format=csv');
-  }
-
-  try {
-    const response = await fetch(csvUrl);
-    if (!response.ok) throw new Error("Hálózati hiba");
-    
-    const data = await response.text();
-    
-    // Ha a válasz HTML-lel kezdődik, akkor a link nem jó (pl. bejelentkezést kér)
-    if (data.trim().startsWith('<!DOCTYPE html>')) {
-      alert("Hiba: A táblázat nem nyilvános, vagy a szerkesztési linket adtad meg CSV helyett! Közzé kell tenned a weben.");
-      return;
+    const inputUrl = document.getElementById('csvUrl').value.trim();
+    if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
+  
+    let csvUrl = inputUrl;
+    if (csvUrl.includes('/edit')) {
+      csvUrl = csvUrl.replace(/\/edit.*$/, '/export?format=csv');
     }
-
-    const rows = data.split('\n').filter(r => r.trim() !== '');
-
-    words = rows.map(row => {
-      // Egyszerű CSV sor feldolgozás (kezeli az idézőjeleket is ha lennének)
-      const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-      return { 
-        en: cols[0]?.replace(/"/g, '').trim(), 
-        hu: cols[1]?.replace(/"/g, '').trim() 
+  
+    try {
+      const response = await fetch(csvUrl);
+      if (!response.ok) throw new Error("Hálózati hiba: " + response.status);
+      
+      const data = await response.text();
+      
+      if (data.trim().startsWith('<!DOCTYPE html>')) {
+        alert("Hiba: A táblázat nem nyilvános! (A Google bejelentkező oldalát kaptuk meg).");
+        return;
       }
-    }).filter(w => w.en && w.hu); // Csak azokat tartjuk meg, amiben van angol és magyar szó is
-
-    if (words.length === 0) {
-      alert("Nem találtunk szavakat a táblázatban. Ellenőrizd, hogy az 1. és 2. oszlopban vannak-e adatok.");
-      return;
+  
+      const rows = data.split('\n');
+      let validWords = [];
+      let i = 0;
+      let safetyCounter = 0;
+      const maxSafetyLimit = 5000; // Végtelen ciklus elleni védelem maximális iteráció
+  
+      // Biztonságos iteráció a dokumentum végéig
+      while (i < rows.length && safetyCounter < maxSafetyLimit) {
+        safetyCounter++;
+        const currentRow = rows[i];
+        i++;
+  
+        // Ha a sor üres vagy csak szóközöket tartalmaz, lépjünk a következőre
+        if (!currentRow || currentRow.trim() === '') {
+          continue;
+        }
+  
+        // Oszlopok szétbontása CSV-szerűen
+        const cols = currentRow.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        const en = cols[0]?.replace(/"/g, '').trim();
+        const hu = cols[1]?.replace(/"/g, '').trim();
+  
+        // Ha az angol vagy a magyar szó hiányzik (üres cella), ugorjuk át
+        if (!en || !hu) {
+          console.log(`Hiányos adat a(z) ${i}. sorban, kihagyva.`);
+          continue;
+        }
+  
+        // Ha mindkettő megvan, adjuk hozzá a listához
+        validWords.push({ en, hu });
+      }
+  
+      words = validWords;
+  
+      if (words.length === 0) {
+        alert("Nem találtunk érvényes szavakat a táblázatban. Ellenőrizd, hogy az 1. és 2. oszlopban vannak-e adatok.");
+        return;
+      }
+  
+      currentIndex = 0;
+      showCard();
+      showFeedback(`Sikeresen betöltve: ${words.length} szó`, "text-green-400");
+    } catch (err) {
+      console.error(err);
+      showFeedback("Nem sikerült betölteni a CSV-t. Nézd meg a konzolt!", "text-red-400");
     }
-
-    currentIndex = 0;
-    showCard();
-    showFeedback(`Sikeresen betöltve: ${words.length} szó`, "text-green-400");
-  } catch (err) {
-    console.error(err);
-    showFeedback("Nem sikerült betölteni a CSV-t. Ellenőrizd a linket!", "text-red-400");
   }
-}
 
     function showCard() {
       if (words.length === 0) return;
