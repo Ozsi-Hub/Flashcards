@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interaktív Szókártya & Nyelvtanuló App</title>
+  <title>Okos Szószedet Tanuló App</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-start p-4">
@@ -12,10 +12,17 @@
     
     <!-- Google Sheet CSV URL Beállítás -->
     <div class="mb-3">
-      <h1 class="text-base font-bold text-center mb-2 text-blue-400">📚 Szószedet Tanuló App</h1>
+      <h1 class="text-base font-bold text-center mb-1 text-blue-400">🧠 Okos Szótanuló App</h1>
+      <p class="text-[11px] text-slate-400 text-center mb-2">1. oszlop: Angol | 2. oszlop: Magyar</p>
       <input type="text" id="csvUrl" placeholder="Illeszd be a Google Sheet CSV URL-t" 
              class="w-full text-xs p-2 rounded bg-slate-700 text-slate-200 border border-slate-600 focus:outline-none focus:border-blue-500">
       <button id="loadBtn" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 text-xs py-2 rounded font-bold transition">Szavak betöltése</button>
+    </div>
+
+    <!-- Tanulási Mód Választó (Normál vs Okos) -->
+    <div class="flex bg-slate-900 p-1 rounded-xl mb-3 border border-slate-700">
+      <button id="modeNormal" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-blue-600 text-white transition">Hagyományos (Összes)</button>
+      <button id="modeSmart" class="flex-1 py-1.5 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-white transition">🎯 Okos Ismétlés</button>
     </div>
 
     <!-- 4 Lapfül Ikonokkal -->
@@ -36,12 +43,19 @@
 
     <!-- ================= 1. FÜL: FLASHCARD ================= -->
     <div id="tabContent0" class="tab-content">
-      <div id="card" class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
+      <div id="card" class="h-36 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-650 transition shadow-inner">
         <span id="cardLabel" class="text-xs text-blue-400 mb-1 uppercase tracking-wider">Angol szó:</span>
         <span id="cardText" class="text-2xl font-bold text-center">Töltsd be a szavakat</span>
         <span id="cardHint" class="text-xs text-slate-400 mt-2">(Kattints a fordításhoz)</span>
       </div>
-      <div class="flex justify-between items-center mt-4">
+      
+      <!-- Súlyozott visszajelző gombok Flashcard alá -->
+      <div id="cardRatingBox" class="hidden grid grid-cols-2 gap-2 mt-3">
+        <button id="btnNotKnown" class="bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700 py-1.5 rounded-lg text-xs font-semibold transition">❌ Nem tudtam</button>
+        <button id="btnKnown" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 py-1.5 rounded-lg text-xs font-semibold transition">✓ Tudtam</button>
+      </div>
+
+      <div class="flex justify-between items-center mt-3">
         <button id="prevCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">⬅ Előző</button>
         <span id="cardCounter" class="text-xs text-slate-400">0 / 0</span>
         <button id="nextCardBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-xs font-medium transition">Következő ➡</button>
@@ -50,7 +64,7 @@
 
     <!-- ================= 2. FÜL: KIEJTÉS (MIKROFONOS) ================= -->
     <div id="tabContent1" class="tab-content hidden">
-      <div class="h-40 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 shadow-inner">
+      <div class="h-36 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-4 shadow-inner">
         <span class="text-xs text-purple-400 mb-1 uppercase tracking-wider">Mondd ki angolul:</span>
         <span id="voiceTargetHu" class="text-2xl font-bold text-center">...</span>
         <span id="voiceHint" class="text-xs text-slate-400 mt-2">Nyomd meg a mikrofont!</span>
@@ -67,21 +81,17 @@
     <!-- ================= 3. FÜL: PÁROSÍTÓ JÁTÉK ================= -->
     <div id="tabContent2" class="tab-content hidden">
       <div class="text-xs text-slate-400 text-center mb-2">Kattints egy rejtett angol szóra (felolvassa), majd válaszd ki a magyar párját!</div>
-      <div class="grid grid-cols-2 gap-3 min-h-[190px]" id="matchContainer">
-        <!-- Dinamikus tartalom -->
-      </div>
+      <div class="grid grid-cols-2 gap-3 min-h-[180px]" id="matchContainer"></div>
       <button id="resetMatchBtn" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-xs py-2 rounded-xl transition font-medium">🔄 Új 4-es csomag</button>
     </div>
 
     <!-- ================= 4. FÜL: KVÍZ ================= -->
     <div id="tabContent3" class="tab-content hidden">
-      <div class="h-32 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-3 shadow-inner">
+      <div class="h-28 bg-slate-700 rounded-xl flex flex-col items-center justify-center p-3 shadow-inner">
         <span class="text-xs text-emerald-400 mb-1">Mit jelent ez angolul?</span>
         <span id="quizQuestion" class="text-xl font-bold text-center">...</span>
       </div>
-      <div id="quizOptions" class="grid grid-cols-2 gap-2 mt-3">
-        <!-- Opciók gombok -->
-      </div>
+      <div id="quizOptions" class="grid grid-cols-2 gap-2 mt-3"></div>
     </div>
 
   </div>
@@ -90,8 +100,8 @@
     let words = [];
     let currentIndex = 0;
     let isFlipped = false;
+    let studyMode = 'normal';
 
-    // Beszédfelismerés előkészítése
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
 
@@ -118,12 +128,17 @@
             fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-green-400";
             fb.innerText = `✓ Helyes! ("${spokenText}")`;
           }
+          words[currentIndex].weight = Math.max(1, words[currentIndex].weight - 1);
+          saveWeightsToLocalStorage();
+
           setTimeout(() => { nextVoiceCard(); }, 1500);
         } else {
           if (fb) {
             fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-red-400";
             fb.innerHTML = `✗ Hallott: "${spokenText}". Helyes: <b>${words[currentIndex].en}</b>`;
           }
+          words[currentIndex].weight += 2;
+          saveWeightsToLocalStorage();
         }
       };
 
@@ -133,7 +148,52 @@
       };
     }
 
-    // Fül váltás logika
+    function setStudyMode(mode) {
+      studyMode = mode;
+      const btnNormal = document.getElementById('modeNormal');
+      const btnSmart = document.getElementById('modeSmart');
+      const ratingBox = document.getElementById('cardRatingBox');
+
+      if (mode === 'normal') {
+        btnNormal.className = "flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-blue-600 text-white transition";
+        btnSmart.className = "flex-1 py-1.5 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-white transition";
+        ratingBox.classList.add('hidden');
+      } else {
+        btnSmart.className = "flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-emerald-600 text-white transition";
+        btnNormal.className = "flex-1 py-1.5 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-white transition";
+        ratingBox.classList.remove('hidden');
+      }
+      currentIndex = 0;
+      showCard();
+    }
+
+    function getNextSmartIndex() {
+      let totalWeight = words.reduce((sum, w) => sum + w.weight, 0);
+      let randomVal = Math.random() * totalWeight;
+      let currentSum = 0;
+      
+      for (let i = 0; i < words.length; i++) {
+        currentSum += words[i].weight;
+        if (randomVal <= currentSum) return i;
+      }
+      return 0;
+    }
+
+    function saveWeightsToLocalStorage() {
+      let weightsData = words.map(w => ({ en: w.en, weight: w.weight }));
+      localStorage.setItem('vocabWeights', JSON.stringify(weightsData));
+    }
+
+    function loadWeightsFromLocalStorage() {
+      let saved = localStorage.getItem('vocabWeights');
+      if (!saved) return;
+      let weightsData = JSON.parse(saved);
+      words.forEach(w => {
+        let found = weightsData.find(s => s.en === w.en);
+        if (found) w.weight = found.weight;
+      });
+    }
+
     function switchTab(index) {
       for (let i = 0; i < 4; i++) {
         document.getElementById(`tabContent${i}`).classList.add('hidden');
@@ -148,7 +208,6 @@
       if (index === 3 && words.length > 0) initQuiz();
     }
 
-    // CSV Betöltés
     async function loadWords() {
       const inputUrl = document.getElementById('csvUrl').value.trim();
       if (!inputUrl) return alert("Kérlek adj meg egy valid CSV URL-t!");
@@ -182,7 +241,7 @@
           const en = cols[0]?.replace(/"/g, '').trim();
           const hu = cols[1]?.replace(/"/g, '').trim();
 
-          if (en && hu) validWords.push({ en, hu });
+          if (en && hu) validWords.push({ en, hu, weight: 3 });
         }
 
         words = validWords;
@@ -191,6 +250,7 @@
           return;
         }
 
+        loadWeightsFromLocalStorage();
         currentIndex = 0;
         showCard();
         showVoiceCard();
@@ -201,11 +261,10 @@
       }
     }
 
-    // 1. Fül logika (Flashcard)
     function showCard() {
       if (words.length === 0) return;
       isFlipped = false;
-      document.getElementById('cardLabel').innerText = "Angol szó:";
+      document.getElementById('cardLabel').innerText = studyMode === 'smart' ? `Angol szó (Súly: ${words[currentIndex].weight}):` : "Angol szó:";
       document.getElementById('cardText').innerText = words[currentIndex].en;
       document.getElementById('cardHint').innerText = "(Kattints a fordításhoz)";
       document.getElementById('cardCounter').innerText = `${currentIndex + 1} / ${words.length}`;
@@ -221,7 +280,11 @@
 
     function nextCard() {
       if (words.length === 0) return;
-      currentIndex = (currentIndex + 1) % words.length;
+      if (studyMode === 'smart') {
+        currentIndex = getNextSmartIndex();
+      } else {
+        currentIndex = (currentIndex + 1) % words.length;
+      }
       showCard();
     }
 
@@ -231,7 +294,17 @@
       showCard();
     }
 
-    // 2. Fül logika (Kiejtés)
+    function rateWord(known) {
+      if (words.length === 0) return;
+      if (known) {
+        words[currentIndex].weight = Math.max(1, words[currentIndex].weight - 1);
+      } else {
+        words[currentIndex].weight += 3;
+      }
+      saveWeightsToLocalStorage();
+      nextCard();
+    }
+
     function showVoiceCard() {
       if (words.length === 0) return;
       document.getElementById('voiceTargetHu').innerText = words[currentIndex].hu;
@@ -240,7 +313,11 @@
 
     function nextVoiceCard() {
       if (words.length === 0) return;
-      currentIndex = (currentIndex + 1) % words.length;
+      if (studyMode === 'smart') {
+        currentIndex = getNextSmartIndex();
+      } else {
+        currentIndex = (currentIndex + 1) % words.length;
+      }
       showVoiceCard();
     }
 
@@ -254,20 +331,25 @@
       }
     }
 
-    // 3. Fül logika (Párosító játék)
+    // 3. FÜL: PÁROSÍTÓ JÁTÉK LOGIKA
     let matchCurrentItems = [];
     let selectedEnIndex = null;
     let selectedHuIndex = null;
     let matchedPairsCount = 0;
+    let wrongHuIndex = null; // Ideiglenes piros kerethez
 
     function initMatchGame() {
       if (words.length < 4) return alert("Legalább 4 szó szükséges a párosító játékhoz!");
       
-      let shuffledPool = [...words].sort(() => 0.5 - Math.random());
-      matchCurrentItems = shuffledPool.slice(0, 4).map(item => ({ ...item, matched: false, hidden: true }));
+      let pool = studyMode === 'smart' 
+        ? [...words].sort((a, b) => b.weight - a.weight) 
+        : [...words].sort(() => 0.5 - Math.random());
+
+      matchCurrentItems = pool.slice(0, 4).map(item => ({ ...item, matched: false }));
       matchedPairsCount = 0;
       selectedEnIndex = null;
       selectedHuIndex = null;
+      wrongHuIndex = null;
 
       renderMatchBoard();
     }
@@ -277,25 +359,37 @@
       if (!container) return;
       container.innerHTML = '';
 
-      let enCards = matchCurrentItems.map((item, idx) => ({ ...item, originalIdx: idx }));
       let huCards = matchCurrentItems.map((item, idx) => ({ ...item, originalIdx: idx }));
-      
       huCards.sort(() => 0.5 - Math.random());
 
       let html = '<div class="flex flex-col gap-2">';
       matchCurrentItems.forEach((item, idx) => {
-        let bgClass = item.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedEnIndex === idx ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
+        // Ha helyes pár, zöld keret + megjelenik az angol szó. Ha nem, csak a lakat ikon látszik.
+        let bgClass = item.matched 
+          ? 'bg-emerald-950 border-emerald-500 text-emerald-200' 
+          : (selectedEnIndex === idx ? 'bg-blue-600 border-blue-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
         
-        html += `<div data-en-idx="${idx}" class="en-card p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
-                  ${item.hidden ? '🔒 <i>(Kattints a hallgatáshoz)</i>' : `<span class="text-blue-300 font-bold">${item.en}</span>`}
+        let content = item.matched 
+          ? `<span class="text-emerald-300 font-bold">${item.en}</span>` 
+          : `🔒 <i>(Kattints a hangért)</i>`;
+
+        html += `<div data-en-idx="${idx}" class="en-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
+                  ${content}
                  </div>`;
       });
       html += '</div><div class="flex flex-col gap-2">';
 
       huCards.forEach((huItem) => {
-        let bgClass = huItem.matched ? 'bg-emerald-900 border-emerald-600 text-emerald-200' : (selectedHuIndex === huItem.originalIdx ? 'bg-amber-600 border-amber-400' : 'bg-slate-700 border-slate-600 hover:bg-slate-650');
+        let bgClass = 'bg-slate-700 border-slate-600 hover:bg-slate-650';
+        if (huItem.matched) {
+          bgClass = 'bg-emerald-950 border-emerald-500 text-emerald-200';
+        } else if (wrongHuIndex === huItem.originalIdx) {
+          bgClass = 'bg-red-950 border-red-500 text-red-200'; // Ideiglenes piros keret hibánál
+        } else if (selectedHuIndex === huItem.originalIdx) {
+          bgClass = 'bg-amber-600 border-amber-400';
+        }
 
-        html += `<div data-hu-idx="${huItem.originalIdx}" class="hu-card p-2.5 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-11 transition ${bgClass}">
+        html += `<div data-hu-idx="${huItem.originalIdx}" class="hu-card p-2 rounded-lg border text-xs font-semibold cursor-pointer text-center flex items-center justify-center h-10 transition ${bgClass}">
                   ${huItem.text}
                  </div>`;
       });
@@ -320,7 +414,7 @@
 
     function selectEn(idx) {
       if (matchCurrentItems[idx].matched) return;
-      matchCurrentItems[idx].hidden = false;
+      // Nem fedjük fel az angol szót, csak felolvassuk
       speakWord(matchCurrentItems[idx].en);
 
       selectedEnIndex = idx;
@@ -346,9 +440,13 @@
     function checkMatch() {
       if (selectedEnIndex !== null && selectedHuIndex !== null) {
         if (selectedEnIndex === selectedHuIndex) {
+          // Helyes találat: mindkettő zöld lesz, és az angol szó előbújik
           matchCurrentItems[selectedEnIndex].matched = true;
           matchedPairsCount++;
           
+          matchCurrentItems[selectedEnIndex].weight = Math.max(1, matchCurrentItems[selectedEnIndex].weight - 1);
+          saveWeightsToLocalStorage();
+
           selectedEnIndex = null;
           selectedHuIndex = null;
 
@@ -359,11 +457,20 @@
             }, 400);
           }
         } else {
+          // Rossz találat: a magyar szó piros keretet kap, amit 2mp múlva eltüntetünk
+          wrongHuIndex = selectedHuIndex;
+          matchCurrentItems[selectedEnIndex].weight += 2;
+          saveWeightsToLocalStorage();
+
+          renderMatchBoard();
+
           setTimeout(() => {
+            wrongHuIndex = null;
             selectedEnIndex = null;
             selectedHuIndex = null;
             renderMatchBoard();
-          }, 500);
+          }, 2000); // 2 másodperc piros keret
+          return;
         }
       }
     }
@@ -371,7 +478,11 @@
     // 4. Fül logika (Kvíz)
     function initQuiz() {
       if (words.length < 4) return;
-      let currentQuizWord = words[Math.floor(Math.random() * words.length)];
+      
+      let currentQuizWord = studyMode === 'smart' 
+        ? words[getNextSmartIndex()] 
+        : words[Math.floor(Math.random() * words.length)];
+
       document.getElementById('quizQuestion').innerText = currentQuizWord.hu;
 
       let options = [currentQuizWord.en];
@@ -387,24 +498,30 @@
         let btn = document.createElement('button');
         btn.className = "p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600";
         btn.innerText = opt;
-        btn.addEventListener('click', () => checkQuiz(opt, currentQuizWord.en));
+        btn.addEventListener('click', () => checkQuiz(opt, currentQuizWord, currentQuizWord.en));
         optContainer.appendChild(btn);
       });
     }
 
-    function checkQuiz(selected, correct) {
+    function checkQuiz(selected, quizWord, correct) {
       if (selected === correct) {
+        quizWord.weight = Math.max(1, quizWord.weight - 1);
+        saveWeightsToLocalStorage();
         alert("Helyes válasz! 🎉");
         initQuiz();
       } else {
+        quizWord.weight += 2;
+        saveWeightsToLocalStorage();
         alert(`Nem jó. A helyes válasz: ${correct}`);
         initQuiz();
       }
     }
 
-    // Gombok összekötése eseménykezelőkkel DOM betöltődés után
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('loadBtn').addEventListener('click', loadWords);
+      document.getElementById('modeNormal').addEventListener('click', () => setStudyMode('normal'));
+      document.getElementById('modeSmart').addEventListener('click', () => setStudyMode('smart'));
+
       document.getElementById('tabBtn0').addEventListener('click', () => switchTab(0));
       document.getElementById('tabBtn1').addEventListener('click', () => switchTab(1));
       document.getElementById('tabBtn2').addEventListener('click', () => switchTab(2));
@@ -413,6 +530,9 @@
       document.getElementById('card').addEventListener('click', flipCard);
       document.getElementById('prevCardBtn').addEventListener('click', prevCard);
       document.getElementById('nextCardBtn').addEventListener('click', nextCard);
+
+      document.getElementById('btnKnown').addEventListener('click', () => rateWord(true));
+      document.getElementById('btnNotKnown').addEventListener('click', () => rateWord(false));
 
       document.getElementById('micBtn').addEventListener('click', startListening);
       document.getElementById('nextVoiceBtn').addEventListener('click', nextVoiceCard);
