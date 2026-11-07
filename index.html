@@ -103,6 +103,7 @@
     let currentIndex = 0;
     let isFlipped = false;
     let studyMode = 'normal';
+    let isQuizAnswering = false;
 
     function setStatus(text, colorClass = "text-yellow-400") {
       const el = document.getElementById('statusMsg');
@@ -124,7 +125,7 @@
         const fb = document.getElementById('voiceFeedback');
         if (fb) {
           fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-yellow-400";
-          fb.innerText = "Hallgatlak... Besélj!";
+          fb.innerText = "Hallgatlak... Beszélj!";
         }
       };
 
@@ -492,9 +493,10 @@
       }
     }
 
-    // 4. Fül logika (Kvíz)
+    // ================= 4. FÜL: KVÍZ LOGIKA =================
     function initQuiz() {
       if (words.length < 4) return;
+      isQuizAnswering = false;
       
       let currentQuizWord = studyMode === 'smart' 
         ? words[getNextSmartIndex()] 
@@ -513,24 +515,40 @@
       optContainer.innerHTML = '';
       options.forEach(opt => {
         let btn = document.createElement('button');
-        btn.className = "p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600";
+        btn.className = "p-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold transition border border-slate-600 text-slate-200";
         btn.innerText = opt;
-        btn.addEventListener('click', () => checkQuiz(opt, currentQuizWord, currentQuizWord.en));
+        btn.addEventListener('click', () => checkQuiz(btn, opt, currentQuizWord, currentQuizWord.en));
         optContainer.appendChild(btn);
       });
     }
 
-    function checkQuiz(selected, quizWord, correct) {
+    function checkQuiz(btnElement, selected, quizWord, correct) {
+      if (isQuizAnswering) return; // Megakadályozza a többszöri kattintást az időzítők alatt
+      isQuizAnswering = true;
+
+      const baseClasses = "p-2.5 rounded-lg text-xs font-semibold transition border";
+
       if (selected === correct) {
+        // Helyes válasz: 3 másodperces zöld kiemelés
         quizWord.weight = Math.max(1, quizWord.weight - 1);
         saveWeightsToLocalStorage();
-        alert("Helyes válasz! 🎉");
-        initQuiz();
+
+        btnElement.className = `${baseClasses} bg-emerald-900/80 text-emerald-200 border-emerald-500 ring-2 ring-emerald-500/50`;
+
+        setTimeout(() => {
+          initQuiz();
+        }, 3000);
       } else {
+        // Hibás válasz: 2 másodperces piros kiemelés
         quizWord.weight += 2;
         saveWeightsToLocalStorage();
-        alert(`Nem jó. A helyes válasz: ${correct}`);
-        initQuiz();
+
+        btnElement.className = `${baseClasses} bg-red-900/80 text-red-200 border-red-500 ring-2 ring-red-500/50`;
+
+        setTimeout(() => {
+          btnElement.className = `${baseClasses} bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600`;
+          isQuizAnswering = false;
+        }, 2000);
       }
     }
   </script>
