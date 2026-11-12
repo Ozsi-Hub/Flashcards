@@ -28,12 +28,12 @@
       <div class="grid grid-cols-2 gap-2 mb-2">
         <div>
           <label for="rangeFrom" class="block text-[10px] text-slate-400 mb-0.5">Tól (szó sorszáma):</label>
-          <input type="number" id="rangeFrom" min="1" placeholder="Pl. 500" 
+          <input type="number" id="rangeFrom" min="1" placeholder="Pl. 1000" 
                  class="w-full text-xs p-2 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700/80 focus:outline-none focus:border-indigo-500 transition">
         </div>
         <div>
           <label for="rangeTo" class="block text-[10px] text-slate-400 mb-0.5">Ig (szó sorszáma):</label>
-          <input type="number" id="rangeTo" min="1" placeholder="Pl. 1000" 
+          <input type="number" id="rangeTo" min="1" placeholder="Pl. 2000" 
                  class="w-full text-xs p-2 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700/80 focus:outline-none focus:border-indigo-500 transition">
         </div>
       </div>
@@ -120,8 +120,8 @@
   </div>
 
   <script>
-    let allWords = [];     // Teljes betöltött szótár
-    let activeWords = [];  // A beállított tól-ig tartomány szerinti szűrt szótár
+    let allWords = [];     
+    let activeWords = [];  
     let currentIndex = 0;
     let isFlipped = false;
     let studyMode = 'normal';
@@ -200,7 +200,6 @@
       showCard();
     }
 
-    // Okos sorsolás: előbb az aktív tartomány vége felüli (újabb) szavak
     function getNextSmartIndex() {
       if (activeWords.length === 0) return 0;
       if (studyMode === 'normal') {
@@ -304,13 +303,12 @@
 
         loadWeightsFromLocalStorage();
 
-        // Mezők inicializálása és tartomány konténer megjelenítése
         document.getElementById('rangeFrom').value = 1;
         document.getElementById('rangeTo').value = allWords.length;
         document.getElementById('totalWordsInfo').innerText = `Összesen: ${allWords.length} szó`;
         document.getElementById('rangeSelectorContainer').classList.remove('hidden');
 
-        applyWordRange(); // Alapértelmezésben az egész lista
+        applyWordRange();
 
         setStatus(`Sikeresen betöltve: ${allWords.length} szó!`, "text-emerald-400");
       } catch (err) {
@@ -320,7 +318,6 @@
       }
     }
 
-    // Egyedi Tól - Ig tartomány alkalmazása
     function applyWordRange() {
       if (allWords.length === 0) return;
 
@@ -334,7 +331,6 @@
         return;
       }
 
-      // JavaScript indexelés 0-tól indul, ezért a -1
       activeWords = allWords.slice(fromVal - 1, toVal);
 
       if (activeWords.length === 0) {
@@ -346,10 +342,13 @@
       showCard();
       showVoiceCard();
 
-      // Aktív fül frissítése, ha párosító vagy kvíz van nyitva
+      // ** JAVÍTÁS ITT: ** Tartományváltáskor azonnal frissítjük a háttérben futó játékokat is az új aktív listával!
       let activeTabId = document.querySelector('.tab-content:not(.hidden)').id;
-      if (activeTabId === 'tabContent2' && activeWords.length >= 4) initMatchGame();
-      if (activeTabId === 'tabContent3' && activeWords.length >= 4) initQuiz();
+      if (activeTabId === 'tabContent2') {
+        initMatchGame();
+      } else if (activeTabId === 'tabContent3') {
+        initQuiz();
+      }
     }
 
     function showCard() {
@@ -428,6 +427,8 @@
 
     function initMatchGame() {
       if (activeWords.length < 4) {
+        const container = document.getElementById('matchContainer');
+        if(container) container.innerHTML = '<div class="text-xs text-rose-400 text-center col-span-2">A kiválasztott tartományban nincs elég (min. 4) szó a párosítóhoz!</div>';
         return;
       }
       
@@ -570,7 +571,13 @@
 
     // ================= 4. FÜL: KVÍZ =================
     function initQuiz() {
-      if (activeWords.length < 4) return;
+      if (activeWords.length < 4) {
+        const qEl = document.getElementById('quizQuestion');
+        const optContainer = document.getElementById('quizOptions');
+        if(qEl) qEl.innerText = "Nincs elég szó!";
+        if(optContainer) optContainer.innerHTML = '<div class="text-xs text-rose-400 text-center col-span-2">Legalább 4 szó szükséges a tartományban a kvízhez!</div>';
+        return;
+      }
       isQuizAnswering = false;
       
       let quizIdx = getNextSmartIndex();
