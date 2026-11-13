@@ -126,7 +126,7 @@
     let isFlipped = false;
     let studyMode = 'normal';
     let isQuizAnswering = false;
-    let currentQuizWord = null; // Aktív kvíz szó referenciája
+    let currentQuizWord = null; 
 
     function setStatus(text, colorClass = "text-amber-400") {
       const el = document.getElementById('statusMsg');
@@ -197,7 +197,7 @@
         btnNormal.className = "flex-1 py-1.5 text-[11px] font-medium rounded-lg text-slate-400 hover:text-white transition";
         ratingBox.classList.remove('hidden');
       }
-      currentIndex = studyMode === 'smart' ? getNextSmartIndex() : 0;
+      currentIndex = studyMode === 'smart' ? activeWords.length - 1 : 0;
       showCard();
     }
 
@@ -343,7 +343,6 @@
       showCard();
       showVoiceCard();
 
-      // Frissítjük a füleket a tartomány alapján
       let activeTabId = document.querySelector('.tab-content:not(.hidden)').id;
       if (activeTabId === 'tabContent2') {
         initMatchGame();
@@ -570,7 +569,7 @@
       }
     }
 
-    // ================= 4. FÜL: KVÍZ (Javítva az aktív tartományra) =================
+    // ================= 4. FÜL: KVÍZ (Tökéletesített, független sorsolással) =================
     function initQuiz() {
       if (activeWords.length < 4) {
         const qEl = document.getElementById('quizQuestion');
@@ -581,9 +580,30 @@
       }
       isQuizAnswering = false;
       
-      // Biztosan az activeWords listából sorsolunk indexet
-      let quizIdx = getNextSmartIndex();
-      currentQuizWord = activeWords[quizIdx];
+      // Független, biztonságos sorsolás az activeWords-ből (Okos módban súlyozva, normál módban teljesen random)
+      let randIdx = 0;
+      if (studyMode === 'smart') {
+        let totalWeight = 0;
+        let weights = activeWords.map((w, idx) => {
+          let posFactor = (idx + 1) / activeWords.length;
+          let wVal = w.weight * (1 + posFactor * 3);
+          totalWeight += wVal;
+          return wVal;
+        });
+        let randomVal = Math.random() * totalWeight;
+        let currentSum = 0;
+        for (let i = 0; i < activeWords.length; i++) {
+          currentSum += weights[i];
+          if (randomVal <= currentSum) {
+            randIdx = i;
+            break;
+          }
+        }
+      } else {
+        randIdx = Math.floor(Math.random() * activeWords.length);
+      }
+
+      currentQuizWord = activeWords[randIdx];
 
       document.getElementById('quizQuestion').innerText = currentQuizWord.hu;
 
