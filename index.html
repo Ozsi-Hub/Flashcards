@@ -126,6 +126,7 @@
     let isFlipped = false;
     let studyMode = 'normal';
     let isQuizAnswering = false;
+    let currentQuizWord = null; // Aktív kvíz szó referenciája
 
     function setStatus(text, colorClass = "text-amber-400") {
       const el = document.getElementById('statusMsg');
@@ -342,7 +343,7 @@
       showCard();
       showVoiceCard();
 
-      // ** JAVÍTÁS ITT: ** Tartományváltáskor azonnal frissítjük a háttérben futó játékokat is az új aktív listával!
+      // Frissítjük a füleket a tartomány alapján
       let activeTabId = document.querySelector('.tab-content:not(.hidden)').id;
       if (activeTabId === 'tabContent2') {
         initMatchGame();
@@ -569,7 +570,7 @@
       }
     }
 
-    // ================= 4. FÜL: KVÍZ =================
+    // ================= 4. FÜL: KVÍZ (Javítva az aktív tartományra) =================
     function initQuiz() {
       if (activeWords.length < 4) {
         const qEl = document.getElementById('quizQuestion');
@@ -580,8 +581,9 @@
       }
       isQuizAnswering = false;
       
+      // Biztosan az activeWords listából sorsolunk indexet
       let quizIdx = getNextSmartIndex();
-      let currentQuizWord = activeWords[quizIdx];
+      currentQuizWord = activeWords[quizIdx];
 
       document.getElementById('quizQuestion').innerText = currentQuizWord.hu;
 
@@ -602,19 +604,19 @@
         let btn = document.createElement('button');
         btn.className = "p-3 bg-slate-800/80 hover:bg-slate-700/80 rounded-xl text-xs font-semibold transition border border-slate-700/60 text-slate-200 shadow-sm";
         btn.innerText = opt;
-        btn.addEventListener('click', () => checkQuiz(btn, opt, currentQuizWord, currentQuizWord.en));
+        btn.addEventListener('click', () => checkQuiz(btn, opt, currentQuizWord.en));
         optContainer.appendChild(btn);
       });
     }
 
-    function checkQuiz(btnElement, selected, quizWord, correct) {
-      if (isQuizAnswering) return;
+    function checkQuiz(btnElement, selected, correct) {
+      if (isQuizAnswering || !currentQuizWord) return;
       isQuizAnswering = true;
 
       const baseClasses = "p-3 rounded-xl text-xs font-semibold transition border shadow-sm";
 
       if (selected === correct) {
-        quizWord.weight = Math.max(1, quizWord.weight - 1);
+        currentQuizWord.weight = Math.max(1, currentQuizWord.weight - 1);
         saveWeightsToLocalStorage();
 
         btnElement.className = `${baseClasses} bg-emerald-950/80 text-emerald-200 border-emerald-500 ring-2 ring-emerald-500/40`;
@@ -623,7 +625,7 @@
           initQuiz();
         }, 3000);
       } else {
-        quizWord.weight += 2;
+        currentQuizWord.weight += 2;
         saveWeightsToLocalStorage();
 
         btnElement.className = `${baseClasses} bg-rose-950/80 text-rose-200 border-rose-500 ring-2 ring-rose-500/40`;
