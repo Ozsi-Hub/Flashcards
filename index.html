@@ -165,7 +165,7 @@
           activeWords[currentIndex].weight = Math.max(1, activeWords[currentIndex].weight - 1);
           saveWeightsToLocalStorage();
 
-          setTimeout(() => { nextVoiceCard(); }, 1500);
+          setTimeout(() => { nextVoiceCard(); }, 750);
         } else {
           if (fb) {
             fb.className = "h-8 mt-2 text-xs font-semibold flex items-center justify-center text-rose-400";
@@ -407,7 +407,7 @@
       if (activeWords.length === 0) return alert("Először töltsd be a szavakat!");
       if (recognition) {
         try { recognition.start(); } 
-        catch (e) { recognition.stop(); setTimeout(() => recognition.start(), 200); }
+        catch (e) { recognition.stop(); setTimeout(() => recognition.start(), 100); }
       } else {
         alert("A böngésződ nem támogatja a beépített beszédfelismerést.");
       }
@@ -545,7 +545,7 @@
           if (matchPairsLeft === 0) {
             setTimeout(() => {
               initMatchGame();
-            }, 600);
+            }, 300);
           }
         } else {
           wrongHuText = selectedHuItem.hu;
@@ -563,7 +563,7 @@
             selectedEnItem = null;
             selectedHuItem = null;
             renderMatchBoard();
-          }, 2000);
+          }, 1000);
           return;
         }
       }
@@ -643,7 +643,7 @@
 
         setTimeout(() => {
           initQuiz();
-        }, 3000);
+        }, 1500);
       } else {
         currentQuizWord.weight += 2;
         saveWeightsToLocalStorage();
@@ -653,7 +653,7 @@
         setTimeout(() => {
           btnElement.className = `${baseClasses} bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border-slate-700/60`;
           isQuizAnswering = false;
-        }, 2000);
+        }, 1000);
       }
     }
   </script>
